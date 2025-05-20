@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # API Configuration  
 api_id = 25031007  # Replace with your actual API ID
 api_hash = "68029e5e2d9c4dd11f600e1692c3acaa"  # Replace with your actual API hash
-session_string = "1BVtsOHkBu5zj8OzlEXDVhEYVFlJJuq7L_r48X88bgdeVU_7N0E0xskdTljG98zIoZdeh_GWMB6iUPKRPapKzrXv3uJ8bvZjd13_SRpW5G0FSncpAHQ4aHI4jBGW66Qb6HO_bJl29W14qZ1KFB3Dw7OweQqGS6lhi8XcScJv56dYCITkYEwx3CN03PHWBPMwMSmz0coXIF4JTa1VwFsO2Ws9jox1KkHtWrjDLKKHSqC6jc-Rp4_oT6ovwBh1B23h-1Aq0Nv2k1R0Uo59olLPYUFcOpO3p_MlWeI-MFo-TqC1n_UcFpbCl6ilRqZDesU61IePazjPgo5edMXpelHC1urDQM0HdKc8="  # Replace with your actual Telethon session string
+session_string = "1BVtsOHkBuwteo891QQt3wAC5SA4vCJcYzdXXHES6QtyRuGGgEzsxyJdzYzD573DvrPi0Z3qqTR5AJWGOZhcKHAV56VZ8MEYw-BADl48k_kCFOZusv2stf1hJPRZQ8G8fxLiWxwnWz_WjgHSLvYxtMmqrUUqXusu1xcZO6BmRoHVMth3xXfdqvXtbEgP6DIQ0fIVLQdFxj3EcE-Q8cuHTb6peDQ9QkV04DME8U51YeEw0AH5156nifS6sKvQLkLmncxyC3jkrY90tKCmyOyieXvDO9UAW-nLOSEg_RbJF0wqduCuzNpl1_kJ8azZlHt2pfpKj140t1VMHE0-HIPxl8Dnc0U1lACQ="  # Replace with your actual Telethon session string
 
 # Sources Configuration - add as many as needed
 source_groups = [-1002410570317]  # Add source group IDs if needed
