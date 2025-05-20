@@ -94,7 +94,7 @@ async def cc_scraper(event):
                 message = (f"𝐀𝐩𝐩𝐫𝐨𝐯𝐞𝐝 ✅\n\n"
                            f"[ϟ]𝗖𝗮𝗿𝗱 -» <code>{result['card']}</code>\n"
                            f"[ϟ]𝗚𝗮𝘁𝗲𝘄𝗮𝘆 -» Braintree Auth\n"
-                           f"[ϟ]�_R𝗲𝘀𝗽𝗼𝗻𝘀𝗲 -» Approved ✅\n\n"
+                           f"[ϟ]𝗥𝗲𝘀𝗽𝗼𝗻𝘀𝗲 -» Approved ✅\n\n"
                            f"[ϟ]𝗜𝗻𝗳𝗼 -» {card_info}\n"
                            f"[ϟ]𝗜𝘀𝘀𝘂𝗲𝗿 -» {issuer} 🏛\n"
                            f"[ϟ]𝗖𝗼𝘂𝗻𝘁𝗿𝘆 -» {country_display}\n\n"
