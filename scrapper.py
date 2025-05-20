@@ -7,7 +7,7 @@ from cc_checker import check_cc
 # API Configuration  
 api_id = 25031007  # Replace with your actual API ID
 api_hash = "68029e5e2d9c4dd11f600e1692c3acaa"  # Replace with your actual API hash
-session_string = "YOUR_SESSION_STRING_HERE"  # Replace with your actual Telethon session string
+session_string = "1BVtsOHkBu5zj8OzlEXDVhEYVFlJJuq7L_r48X88bgdeVU_7N0E0xskdTljG98zIoZdeh_GWMB6iUPKRPapKzrXv3uJ8bvZjd13_SRpW5G0FSncpAHQ4aHI4jBGW66Qb6HO_bJl29W14qZ1KFB3Dw7OweQqGS6lhi8XcScJv56dYCITkYEwx3CN03PHWBPMwMSmz0coXIF4JTa1VwFsO2Ws9jox1KkHtWrjDLKKHSqC6jc-Rp4_oT6ovwBh1B23h-1Aq0Nv2k1R0Uo59olLPYUFcOpO3p_MlWeI-MFo-TqC1n_UcFpbCl6ilRqZDesU61IePazjPgo5edMXpelHC1urDQM0HdKc8="  # Replace with your actual Telethon session string
 
 # Sources Configuration - add as many as needed
 source_groups = [-1002410570317]  # Add source group IDs if needed
