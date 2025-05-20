@@ -14,7 +14,7 @@ api_hash = "68029e5e2d9c4dd11f600e1692c3acaa"  # Replace with your actual API ha
 session_string = "1BVtsOHkBuwteo891QQt3wAC5SA4vCJcYzdXXHES6QtyRuGGgEzsxyJdzYzD573DvrPi0Z3qqTR5AJWGOZhcKHAV56VZ8MEYw-BADl48k_kCFOZusv2stf1hJPRZQ8G8fxLiWxwnWz_WjgHSLvYxtMmqrUUqXusu1xcZO6BmRoHVMth3xXfdqvXtbEgP6DIQ0fIVLQdFxj3EcE-Q8cuHTb6peDQ9QkV04DME8U51YeEw0AH5156nifS6sKvQLkLmncxyC3jkrY90tKCmyOyieXvDO9UAW-nLOSEg_RbJF0wqduCuzNpl1_kJ8azZlHt2pfpKj140t1VMHE0-HIPxl8Dnc0U1lACQ="  # Replace with your actual Telethon session string
 
 # Sources Configuration - add as many as needed
-source_groups = [-1002410570317]  # Add source group IDs if needed
+source_groups = [-1001878543352]  # Add source group IDs if needed
 source_channels = []  # Add source channel IDs if needed
 
 # Target channels where scraped CCs will be sent (you can add multiple IDs)
