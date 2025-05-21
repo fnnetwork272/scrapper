@@ -31,7 +31,7 @@ check_semaphore = asyncio.Semaphore(max_concurrent)
 
 # Enhanced CC patterns to capture more formats
 cc_patterns = [
-    # New Format 1: 𝗖𝗖 ➼ 5424322335125154|07|27|363
+# New Format 1: 𝗖𝗖 ➼ 5424322335125154|07|27|363
     r'(?:𝗖𝗖|CC)\s*➼\s*(\d{13,16})\|(\d{1,2})\|(\d{2,4})\|(\d{3,4})',
     
     r'[•\*\-]\s*CC\s+(\d{13,16})\|(\d{1,2})\|(\d{2,4})\|(\d{3,4})',
@@ -147,8 +147,12 @@ async def check_single_cc(cc):
         result = await check_cc(cc)
         if result['status'] == 'approved':
             logging.info(f"Credit card approved: {cc}")
-            # Format the message as in b3.py
-            card_info = f"{result['card_type']} - {result['card_level']} - {result['card_type_category']}"
+            # Format the card info using the correct field from the API response
+            card_type = result['card_type']
+            card_level = result['card_level']
+            card_type_category = result['type']  # Use 'type' instead of 'card_type_category'
+            card_info = f"{card_type} - {card_level} - {card_type_category}"
+            
             issuer = result['issuer']
             country_display = f"{result['country_name']} {result['country_flag']}" if result['country_flag'] else result['country_name']
             message = (f"𝐀𝐩𝐩𝐫𝐨𝐯𝐞𝐝 ✅\n\n"
@@ -160,6 +164,7 @@ async def check_single_cc(cc):
                        f"[ϟ]𝗖𝗼𝘂𝗻𝘁𝗿𝘆 -» {country_display}\n\n"
                        f"[⌬]𝗧𝗶𝗺𝗲 -» {result['time_taken']:.2f} seconds\n"
                        f"[⌬]𝗣𝗿𝗼𝘅𝘆 -» {result['proxy_status']}\n"
+                       f"[み]𝗢𝘄𝗻𝗲𝗿 -» @FNxELECTRA\n"
                        f"[み]𝗕𝗼𝘁 -» <a href='tg://user?id=8009942983'>𝙁𝙉 𝘽3 𝘼𝙐𝙏𝙃</a>")
             
             # Send the message to all target channels
@@ -180,9 +185,6 @@ async def check_single_cc(cc):
 async def cc_scraper(event):  
     text = event.raw_text  
     found_ccs = set()  
-    
-    # Log the raw message for debugging
-    logging.info(f"Raw message text: {text}")
     
     for pattern in cc_patterns:  
         for match in re.finditer(pattern, text, re.MULTILINE | re.DOTALL):  
