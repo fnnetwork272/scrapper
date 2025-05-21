@@ -147,12 +147,8 @@ async def check_single_cc(cc):
         result = await check_cc(cc)
         if result['status'] == 'approved':
             logging.info(f"Credit card approved: {cc}")
-            # Format the card info using the correct field from the API response
-            card_type = result['card_type']
-            card_level = result['card_level']
-            card_type_category = result['type']  # Use 'type' instead of 'card_type_category'
-            card_info = f"{card_type} - {card_level} - {card_type_category}"
-            
+            # Format the message as in b3.py
+            card_info = f"{result['card_type']} - {result['card_level']} - {result['card_type_category']}"
             issuer = result['issuer']
             country_display = f"{result['country_name']} {result['country_flag']}" if result['country_flag'] else result['country_name']
             message = (f"𝐀𝐩𝐩𝐫𝐨𝐯𝐞𝐝 ✅\n\n"
@@ -160,11 +156,10 @@ async def check_single_cc(cc):
                        f"[ϟ]𝗚𝗮𝘁𝗲𝘄𝗮𝘆 -» Braintree Auth\n"
                        f"[ϟ]𝗥𝗲𝘀𝗽𝗼𝗻𝘀𝗲 -» Approved ✅\n\n"
                        f"[ϟ]𝗜𝗻𝗳𝗼 -» {card_info}\n"
-                       f"[ϟ]𝗜𝘀𝘀𝘂𝗲𝗿 -» {issuer} 🏛\n"
+                       f"[ϟ]�_I𝘀𝘀𝘂𝗲𝗿 -» {issuer} 🏛\n"
                        f"[ϟ]𝗖𝗼𝘂𝗻𝘁𝗿𝘆 -» {country_display}\n\n"
                        f"[⌬]𝗧𝗶𝗺𝗲 -» {result['time_taken']:.2f} seconds\n"
                        f"[⌬]𝗣𝗿𝗼𝘅𝘆 -» {result['proxy_status']}\n"
-                       f"[み]𝗢𝘄𝗻𝗲𝗿 -» @FNxELECTRA\n"
                        f"[み]𝗕𝗼𝘁 -» <a href='tg://user?id=8009942983'>𝙁𝙉 𝘽3 𝘼𝙐𝙏𝙃</a>")
             
             # Send the message to all target channels
