@@ -11,12 +11,12 @@ from cc_checker import check_cc
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # API Configuration  
-api_id = 25031007  # Replace with your actual API ID
-api_hash = "68029e5e2d9c4dd11f600e1692c3acaa"  # Replace with your actual API hash
-session_string = "1BVtsOHkBuwteo891QQt3wAC5SA4vCJcYzdXXHES6QtyRuGGgEzsxyJdzYzD573DvrPi0Z3qqTR5AJWGOZhcKHAV56VZ8MEYw-BADl48k_kCFOZusv2stf1hJPRZQ8G8fxLiWxwnWz_WjgHSLvYxtMmqrUUqXusu1xcZO6BmRoHVMth3xXfdqvXtbEgP6DIQ0fIVLQdFxj3EcE-Q8cuHTb6peDQ9QkV04DME8U51YeEw0AH5156nifS6sKvQLkLmncxyC3jkrY90tKCmyOyieXvDO9UAW-nLOSEg_RbJF0wqduCuzNpl1_kJ8azZlHt2pfpKj140t1VMHE0-HIPxl8Dnc0U1lACQ="  # Replace with your new Telethon session string
+api_id = 25005379  # Replace with your actual API ID
+api_hash = "f17fb76fd7acaca5ed44e0c04e260eaa"  # Replace with your actual API hash
+session_string = "1BVtsOKEBu4kzUabLA0lft7Xpf2FEyNIoqecFKQ0LwrN4nQ_nGKrz3gUQ2vlzcikm9YwbONQ96_l4ZcUyKcDvzaNflsb8kHJZAcJnGSlkL-fmRkA_sCz5HRzqiK6aApSHi4to-vptfA4XYvwlQ_B0EWD9IFx75IA29DD6iETdzBIWFkIAvvxlMitraziWhnPoToHUA83LoSH-4GbaFT5-lWKA0od1fNSM4B0bijpxYDnCJ34QVb6WIERKiaBl9Jzvggp9bYZ1fk5jNvqpr7ylhkaHDeKmxJj0hSYJMxV57upOEF_2H6RWri7TxhyevaKczCvl_87uuXpJXy8Z_SBHdu_5IQUlZUE="  # Replace with your new Telethon session string
 
 # Sources Configuration - add as many as needed
-source_groups = [-1002410570317]  # Add your group IDs here
+source_groups = [-1002682944548]  # Add your group IDs here
 source_channels = []  # Add source channel IDs if needed
 
 # Target channels where scraped CCs will be sent (you can add multiple IDs)
