@@ -5,4 +5,4 @@ http://tickets:proxyon145@23.95.239.230:12345
 http://tickets:proxyon145@107.175.37.77:12345  
 http://tickets:proxyon145@168.228.46.128:12345    
 http://tickets:proxyon145@5.157.5.100:12345
-107.173.112.245:12345:tickets:proxyon145
+http://tickets:proxyon145@107.173.112.245:12345
