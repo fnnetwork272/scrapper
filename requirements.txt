@@ -12,3 +12,4 @@ nest_asyncio
 pyuseragents
 telethon
 user_agent
+tenacity
